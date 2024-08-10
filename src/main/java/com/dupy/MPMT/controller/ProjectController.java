@@ -5,6 +5,7 @@ import com.dupy.MPMT.model.Project;
 import com.dupy.MPMT.model.ProjectMember;
 import com.dupy.MPMT.model.ProjectMemberCreate;
 import com.dupy.MPMT.model.User;
+import com.dupy.MPMT.service.EmailService;
 import com.dupy.MPMT.service.ProjectService;
 import com.dupy.MPMT.service.UserService;
 import com.dupy.MPMT.utils.Func;
@@ -29,6 +30,8 @@ public class ProjectController {
     private UserService userService;
     private Project project;
     private User u;
+    @Autowired
+    private EmailService emailService;
 
     @GetMapping("/project")
     public List<Project> projects(@RequestHeader(HttpHeaders.AUTHORIZATION) String auth) {
@@ -60,7 +63,8 @@ public class ProjectController {
             member.setProject(project);
             member.setUser(u);
             member.setRole("1");
-            return ResponseEntity.ok(project);
+            createMember(member);
+            return ResponseEntity.ok(projectService.find(project.getId()));
         }
         return ResponseEntity.internalServerError().body("Unsaved");
     }
@@ -111,7 +115,8 @@ public class ProjectController {
             member.setProject(project);
             member.setUser(user);
             member.setRole(data.getRole());
-            return ResponseEntity.ok(project);
+            createMember(member);
+            return ResponseEntity.ok(projectService.find(project.getId()));
         }
         throw new EntityNotFoundException();
     }
@@ -128,6 +133,9 @@ public class ProjectController {
         if (projectMember == null) projectMember = member;
         projectMember.setRole(member.getRole());
         projectService.link(projectMember);
+        String msg = "You have been added to " + project.getName() + " project";
+        String obj = "New Project";
+        emailService.sendEmail(projectMember.getUser().getEmail(), obj, msg);
     }
 
 

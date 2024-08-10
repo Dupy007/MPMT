@@ -2,6 +2,7 @@ package com.dupy.MPMT.controller;
 
 import com.dupy.MPMT.exception.EntityNotFoundException;
 import com.dupy.MPMT.model.*;
+import com.dupy.MPMT.service.EmailService;
 import com.dupy.MPMT.service.TaskService;
 import com.dupy.MPMT.service.UserService;
 import com.dupy.MPMT.utils.Func;
@@ -13,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RequestMapping("/api")
@@ -24,6 +24,8 @@ public class TaskController {
     private TaskService taskService;
     @Autowired
     private UserService userService;
+    @Autowired
+    private EmailService emailService;
     private Task task;
     private User u;
 
@@ -59,6 +61,11 @@ public class TaskController {
                 t.setAction("Create");
                 t.setTask(task);
                 taskService.link(t);
+            }
+            String msg = "A new task (" + task.getName() + ") has been added to the " + project.getName() + " project ";
+            String obj = "New Task";
+            for (ProjectMember pm : project.getProjectMembers()) {
+                emailService.sendEmail(pm.getUser().getEmail(),obj,msg);
             }
             return ResponseEntity.ok(task);
         }
@@ -97,7 +104,7 @@ public class TaskController {
             if (task.getId() > 0) {
                 TaskHistory t = new TaskHistory();
                 t.setAction("Update");
-                desc+=" => "+task.myString();
+                desc += " => " + task.myString();
                 t.setDescription(desc);
                 t.setTask(task);
                 taskService.link(t);
