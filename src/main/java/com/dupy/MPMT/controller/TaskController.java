@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@CrossOrigin(origins = "*")
 @RequestMapping("/api")
 @RestController
 public class TaskController {
@@ -29,18 +30,24 @@ public class TaskController {
     private Task task;
     private User u;
 
-    @GetMapping("/task")
+    @GetMapping("/task/all")
     public List<Task> tasks(@RequestHeader(HttpHeaders.AUTHORIZATION) String auth) {
         Func.canAcces(userService, auth);
         return taskService.findAll();
     }
 
+    @GetMapping("/task")
+    public List<Task> myTasks(@RequestHeader(HttpHeaders.AUTHORIZATION) String auth) {
+        u = Func.canAcces(userService, auth);
+        return u.getTasks();
+    }
+
     @GetMapping("/task/{id}")
     public ResponseEntity<?> task(@PathVariable int id, @RequestHeader(HttpHeaders.AUTHORIZATION) String auth) {
-        Func.canAcces(userService, auth);
+        u = Func.canAcces(userService, auth);
         task = taskService.find(id);
-
         if (task != null) {
+            Func.canAccesProject(u, task.getProject().getId());
             return ResponseEntity.ok(task);
         }
         throw new EntityNotFoundException();
@@ -65,7 +72,11 @@ public class TaskController {
             String msg = "A new task (" + task.getName() + ") has been added to the " + project.getName() + " project ";
             String obj = "New Task";
             for (ProjectMember pm : project.getProjectMembers()) {
-                emailService.sendEmail(pm.getUser().getEmail(),obj,msg);
+                try {
+                    emailService.sendEmail(pm.getUser().getEmail(), obj, msg);
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                }
             }
             return ResponseEntity.ok(task);
         }
@@ -113,6 +124,7 @@ public class TaskController {
         }
         throw new EntityNotFoundException();
     }
+
     @PutMapping("/task/{id}/assign")
     public ResponseEntity<?> assign(@PathVariable int id, @RequestBody TaskEdit data, @RequestHeader(HttpHeaders.AUTHORIZATION) String auth) {
         u = Func.canAcces(userService, auth);
@@ -127,7 +139,7 @@ public class TaskController {
             if (task.getId() > 0) {
                 TaskHistory t = new TaskHistory();
                 t.setAction("Update");
-                desc+=" => "+task.myString();
+                desc += " => " + task.myString();
                 t.setDescription(desc);
                 t.setTask(task);
                 taskService.link(t);

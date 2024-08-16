@@ -16,7 +16,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
-
+@CrossOrigin(origins = "*")
+@RequestMapping("/api")
 @RestController
 public class Index {
     @Autowired
@@ -94,7 +95,7 @@ public class Index {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody @Valid Login data, BindingResult bindingResult) {
+    public Object login(@RequestBody @Valid Login data, BindingResult bindingResult) {
         String value = data.getEmail() == null ? data.getUsername() : data.getEmail();
         if (value == null && bindingResult.hasErrors()) {
             return ResponseEntity.badRequest().body(bindingResult.getAllErrors().stream().map(DefaultMessageSourceResolvable::getDefaultMessage));
@@ -112,7 +113,7 @@ public class Index {
             user.setToken(Func.generateToken());
             userService.save(user);
         }
-        return ResponseEntity.ok(user);
+        return user;
     }
 
     @PostMapping("/logout")
@@ -121,5 +122,10 @@ public class Index {
         user.setToken(null);
         userService.save(user);
         return ResponseEntity.ok("");
+    }
+    @GetMapping("/profile")
+    public ResponseEntity<?> profile(@RequestHeader(HttpHeaders.AUTHORIZATION) String auth) {
+        user = Func.canAcces(userService, auth);
+        return ResponseEntity.ok(user);
     }
 }

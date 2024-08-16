@@ -1,11 +1,9 @@
 package com.dupy.MPMT.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -28,9 +26,11 @@ public class Task {
     private LocalDateTime updated_at;
     private String name;
     private String description;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private Date due_date;
     private int priority;
     private int status;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private Date end_date;
     @OneToMany(mappedBy = "task")
     private List<TaskHistory> taskHistory;
@@ -56,7 +56,8 @@ public class Task {
         task.setAssigned(data.getAssigned());
         return task;
     }
-    public String myString(){
+
+    public String myString() {
         return "Task{" +
                 "end_date=" + end_date +
                 ", status=" + status +
@@ -64,5 +65,16 @@ public class Task {
                 ", due_date=" + due_date +
                 ", name='" + name + '\'' +
                 '}';
+    }
+
+    public int getProjectId() {
+        return project.getId();
+    }
+
+    public UserView getAssign() {
+        if (assigned!=null){
+            return UserView.parse(assigned);
+        }
+        return null;
     }
 }

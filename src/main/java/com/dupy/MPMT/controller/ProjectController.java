@@ -1,10 +1,7 @@
 package com.dupy.MPMT.controller;
 
 import com.dupy.MPMT.exception.EntityNotFoundException;
-import com.dupy.MPMT.model.Project;
-import com.dupy.MPMT.model.ProjectMember;
-import com.dupy.MPMT.model.ProjectMemberCreate;
-import com.dupy.MPMT.model.User;
+import com.dupy.MPMT.model.*;
 import com.dupy.MPMT.service.EmailService;
 import com.dupy.MPMT.service.ProjectService;
 import com.dupy.MPMT.service.UserService;
@@ -20,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
 
+@CrossOrigin(origins = "*")
 @RequestMapping("/api")
 @RestController
 public class ProjectController {
@@ -33,12 +31,16 @@ public class ProjectController {
     @Autowired
     private EmailService emailService;
 
-    @GetMapping("/project")
+    @GetMapping("/project/all")
     public List<Project> projects(@RequestHeader(HttpHeaders.AUTHORIZATION) String auth) {
         Func.canAcces(userService, auth);
         return projectService.findAll();
     }
-
+    @GetMapping("/project")
+    public List<Project> myProjects(@RequestHeader(HttpHeaders.AUTHORIZATION) String auth) {
+        u = Func.canAcces(userService, auth);
+        return u.getProjects();
+    }
     @GetMapping("/project/{id}")
     public ResponseEntity<?> project(@PathVariable int id, @RequestHeader(HttpHeaders.AUTHORIZATION) String auth) {
         u = Func.canAcces(userService, auth);
@@ -133,9 +135,14 @@ public class ProjectController {
         if (projectMember == null) projectMember = member;
         projectMember.setRole(member.getRole());
         projectService.link(projectMember);
-        String msg = "You have been added to " + project.getName() + " project";
-        String obj = "New Project";
-        emailService.sendEmail(projectMember.getUser().getEmail(), obj, msg);
+        try {
+            String msg = "You have been added to " + project.getName() + " project";
+            String obj = "New Project";
+            emailService.sendEmail(projectMember.getUser().getEmail(), obj, msg);
+
+        }catch (Exception e){
+            System.out.println(e.getMessage());
+        }
     }
 
 

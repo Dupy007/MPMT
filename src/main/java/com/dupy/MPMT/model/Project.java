@@ -1,6 +1,7 @@
 package com.dupy.MPMT.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
@@ -18,6 +19,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -39,13 +41,23 @@ public class Project {
     private String name;
     @NotEmpty(message = "description undefined")
     private String description;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     @NotNull(message = "start_date undefined")
     private Date start_date;
     @Null
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private Date end_date;
+    @JsonIgnore
     @OneToMany(mappedBy = "project")
     private List<ProjectMember> projectMembers;
     @OneToMany(mappedBy = "project")
     private List<Task> tasks;
+    public List<UserView> getMembers(){
+        List<UserView> list = new ArrayList<>();
+        for (ProjectMember pm : projectMembers){
+            list.add(pm.getMember());
+        }
+        return list;
+    }
 
 }
